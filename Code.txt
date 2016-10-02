@@ -1,0 +1,158 @@
+
+****Create my own image from scratch*****
+
+
+var image = new SimpleImage(256, 256);
+
+for (var pixel of image.values()) {
+    var x = pixel.getX();
+    var y = pixel.getY();
+    var p = x * x
+    var q = y * y
+    
+    pixel.setRed(Math.sqrt(x*x + y*y));
+    pixel.setGreen(Math.sqrt(x*x + y*y));
+    pixel.setBlue(Math.sqrt(x*x + y*y));
+}
+
+print(image);
+
+
+***Modified the original image***
+
+var image = new SimpleImage("original.jpg");
+
+
+for (var pixel of image.values()) {
+    var x = pixel.getX()
+    var y = pixel.getY()
+    var width = image.getWidth() 
+   
+    
+    if (x <= 0.20 * y ) 
+    {
+    pixel.setRed(0);
+    pixel.setGreen(0);
+    pixel.setBlue(0);
+    }
+    
+    if (-5 * x + 1470 <=  y ) 
+    {
+    pixel.setRed(0);
+    pixel.setGreen(0);
+    pixel.setBlue(0);
+    }
+    
+    if (y < 15 ) 
+    {
+    pixel.setRed(0);
+    pixel.setGreen(0);
+    pixel.setBlue(0);
+    }
+    
+}
+
+print(image);
+
+
+***Steganography***
+
+// Imput my images
+var start = new SimpleImage("smalllion.jpg");
+var original_hide = new SimpleImage("smalluniverse.jpg");
+
+// Crop my images
+var hide = new SimpleImage(250, 188);
+
+for (var pi of hide.values()) {
+    var x = pi.getX();
+    var y = pi.getY();
+    var opi  = original_hide.getPixel(x, y);
+    pi.setRed(opi.getRed());
+    pi.setGreen(opi.getGreen());
+    pi.setBlue(opi.getBlue());
+}
+
+// Check sizes of images
+print(start);
+print(hide);
+
+// Clear right hand side bits to zeros of original image
+function pixchange(pixval){
+    var x = Math.floor(pixval/4) * 4;
+    return x;
+}
+function chop2hide(image){
+    for(var px of image.values()){
+        px.setRed(pixchange(px.getRed()));
+        px.setGreen(pixchange(px.getGreen()));
+        px.setBlue(pixchange(px.getBlue()));
+    }
+    return image;
+}
+
+// Shift left-most 2 digits to right hand side of hidden image
+function shift(im){
+  var nim = new SimpleImage(im.getWidth(), 
+                            im.getHeight());
+  for(var px of im.values()){
+    var x = px.getX();
+    var y = px.getY();
+    var npx = nim.getPixel(x,y);
+    npx.setRed(Math.floor(px.getRed()/64));
+    npx.setGreen(Math.floor(px.getGreen()/64));
+    npx.setBlue(Math.floor(px.getBlue()/64));
+  }
+  return nim;
+}
+
+// combine two image together
+function addup(p, q) {
+    var answer = p + q;
+    if (p + q > 255) 
+        print("Too Big");
+    return answer;
+}
+
+function combine(a, b) {
+    var n = new SimpleImage(a.getWidth(), a.getHeight());
+    for(var pa of a.values()) {
+        var x = pa.getX();
+        var y = pa.getY();
+        var pb = b.getPixel(x,y);
+        var np = n.getPixel(x,y);
+        np.setRed(addup(pa.getRed(), pb.getRed()));
+        np.setGreen(addup(pa.getGreen(), pb.getGreen()));
+        np.setBlue(addup(pa.getBlue(), pb.getBlue()));
+    }
+    return n;
+}
+
+// Extract hidden image
+function ex(num) {
+    var n = 4;
+    var n2 = 64;
+    return num % n * n2;
+}
+
+function extract(stego) {
+    for(var px of stego.values()) {
+        px.setRed(ex(px.getRed()));
+        px.setGreen(ex(px.getGreen()));
+        px.setBlue(ex(px.getBlue()));
+    }
+    return stego;
+}
+
+// Run the functions and display images
+start = chop2hide(start)
+hide = shift(hide)
+
+var stego = combine(hide, start);
+print(stego);
+
+var hiddenImage = extract(stego);
+print(hiddenImage);
+
+
+
